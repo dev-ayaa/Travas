@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"github.com/travas-io/travas/Travas/pkg/config"
-	"github.com/travas-io/travas/Travas/query"
+	"github.com/travas-io/travas/pkg/config"
+	"github.com/travas-io/travas/query"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

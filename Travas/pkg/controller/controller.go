@@ -2,9 +2,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/travas-io/travas/Travas/pkg/config"
-	"github.com/travas-io/travas/Travas/query"
-	"github.com/travas-io/travas/Travas/query/repo"
+	"github.com/travas-io/travas/pkg/config"
+	"github.com/travas-io/travas/query"
+	"github.com/travas-io/travas/query/repo"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )

@@ -4,16 +4,18 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/travas-io/travas/Travas/pkg/config"
-	"github.com/travas-io/travas/Travas/pkg/controller"
-	"github.com/travas-io/travas/Travas/pkg/db"
+	"github.com/travas-io/travas/pkg/config"
+	"github.com/travas-io/travas/pkg/controller"
+	"github.com/travas-io/travas/pkg/db"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"os"
 )
 
 var app config.TravasConfig
-var session
+
+// var session
 func main() {
 
 	err := godotenv.Load(".env")
