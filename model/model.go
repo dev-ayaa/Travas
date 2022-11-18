@@ -28,7 +28,7 @@ type Tour struct {
 	NumberOfTourist string             `json:"number_of_tourist"`
 	Description     string             `json:"description"`
 	TourGuide       string             `json:"tour_guide"`
-	TourOperator    string             `json:"tour-operator"`
+	TourOperator    string             `json:"tour_operator"`
 	OperatorContact string             `json:"operator_contact"`
 	Date            string             `json:"date"`
 }
