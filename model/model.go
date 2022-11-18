@@ -1,8 +1,9 @@
 package model
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Tourist struct {
@@ -21,5 +22,18 @@ type Tourist struct {
 type ReservedTour struct {
 	//Selected tour will be added here
 	ID       primitive.ObjectID `json:"_id"`
-	TourList map[string]string  `json:"tour_list"`
+	TourList []Tour             `json:"tour_list"`
+}
+type Tour struct {
+	ID              primitive.ObjectID `json:"_id"`
+	TourTitle       string             `json:"tour_title"`
+	MeetingPoint    string             `json:"meeting_point"`
+	StartTime       string             `json:"start_time"`
+	LanguageOffered string             `json:"language_offered"`
+	NumberOfTourist string             `json:"number_of_tourist"`
+	Description     string             `json:"description"`
+	TourGuide       string             `json:"tour_guide"`
+	TourOperator    string             `json:"tour-operator"`
+	OperatorContact string             `json:"operator_contact"`
+	Date            string             `json:"date"`
 }
