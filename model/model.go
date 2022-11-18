@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Tourist struct {
+type User struct {
 	ID            primitive.ObjectID `json:"_id" bson:"_id"`
 	Name          string             `json:"name" Usage:"required,alpha" json:"name,omitempty"`
 	Email         string             `json:"email" Usage:"required,alphanumeric"`
