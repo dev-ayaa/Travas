@@ -3,6 +3,5 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../go-codes/track-space" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../go-codes/p-catalogue" vcs="Git" />
   </component>
 </project>

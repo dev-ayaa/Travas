@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Travas.iml" filepath="$PROJECT_DIR$/.idea/Travas.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../go-codes/p-catalogue/.idea/p-catalogue.iml" filepath="$PROJECT_DIR$/../../go-codes/p-catalogue/.idea/p-catalogue.iml" />
       <module fileurl="file://$PROJECT_DIR$/../go-codes/track-space/.idea/track-space.iml" filepath="$PROJECT_DIR$/../go-codes/track-space/.idea/track-space.iml" />
     </modules>
   </component>
