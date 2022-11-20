@@ -6,13 +6,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type User struct {
+type Tourist struct {
 	ID            primitive.ObjectID `json:"_id" bson:"_id"`
-	Name          string             `json:"name" Usage:"required,alpha" json:"name,omitempty"`
+	FirstName     string             `json:"first_name" Usage:"required,alpha" json:"name,omitempty"`
+	LastName      string             `json:"last_name" Usage:"required,alpha" json:"name,omitempty"`
 	Email         string             `json:"email" Usage:"required,alphanumeric"`
 	Password      string             `json:"password" Usage:"required"`
-	Address       string             `json:"address"`
+	CheckPassword string             `json:"check_password" Usage:"required"`
+	Phone         string             `json:"phone" Usage:"required"`
 	ReservedTours []Tour             `json:"tours_list"`
+	GeoLocation   string             `json:"geo_location"`
 	Token         string             `json:"token" Usage:"jwt"`
 	NewToken      string             `json:"new_token" Usage:"jwt"`
 	CreatedAt     time.Time          `json:"created_at" Usage:"datetime"`
@@ -31,4 +34,10 @@ type Tour struct {
 	TourOperator    string             `json:"tour_operator"`
 	OperatorContact string             `json:"operator_contact"`
 	Date            string             `json:"date"`
+}
+
+type IntraData struct {
+	ID       primitive.ObjectID
+	Email    string
+	Password string
 }

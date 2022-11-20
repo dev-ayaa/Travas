@@ -5,8 +5,10 @@ import (
 	"github.com/travas-io/travas/pkg/controller"
 )
 
-func Routes(r *gin.Engine, c controller.TravasHandler) {
+func Routes(r *gin.Engine, t controller.Travas) {
 	router := r.Use(gin.Logger(), gin.Recovery())
-	router.GET("/", c.HomePage())
+	router.GET("/", t.Home())
+	router.GET("/api/register", t.Register())
+	router.POST("/api/register/user", t.ProcessRegister())
 	return
 }
