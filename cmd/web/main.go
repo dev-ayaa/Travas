@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+	"github.com/travas-io/travas/db"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/controller"
-	"github.com/travas-io/travas/pkg/db"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
@@ -15,13 +17,14 @@ import (
 	"time"
 )
 
-var app config.TravasConfig
+var app config.Tools
 
 var session *scs.SessionManager
+var validate *validator.Validate
 
 func main() {
 
-	err := godotenv.Load(".env")
+	err := godotenv.Load()
 	if err != nil {
 		app.ErrorLogger.Fatalf("cannot load up the env file : %v", err)
 	}
@@ -33,19 +36,21 @@ func main() {
 	session.Cookie.SameSite = http.SameSiteStrictMode
 	session.Cookie.Secure = true
 
+	validate = validator.New()
 	ErrorLogger := log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
 	InfoLogger := log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
 
 	app.ErrorLogger = ErrorLogger
 	app.InfoLogger = InfoLogger
 	app.Session = session
+	app.Validator = validate
 
 	port := os.Getenv("PORT")
 	uri := os.Getenv("TRAVAS_DB_URI")
-
+	fmt.Println(port, uri)
 	app.InfoLogger.Println("*---------- Connecting to the travas cloud database --------")
 
-	client := db.DatabaseConnection(uri)
+	client := db.Connection(uri)
 
 	// close database connection
 	defer func(client *mongo.Client, ctx context.Context) {
@@ -64,7 +69,7 @@ func main() {
 		app.ErrorLogger.Fatalf("untrusted proxy address : %v", err)
 	}
 
-	handler := controller.NewTravasHandler(&app, client)
+	handler := controller.NewTravas(&app, client)
 	Routes(router, *handler)
 
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
