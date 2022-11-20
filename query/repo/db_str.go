@@ -7,11 +7,11 @@ import (
 )
 
 type TravasDB struct {
-	App *config.TravasConfig
+	App *config.Tools
 	DB  *mongo.Client
 }
 
-func NewTravasDB(app *config.TravasConfig, db *mongo.Client) query.TravasDBRepo {
+func NewTravasDB(app *config.Tools, db *mongo.Client) query.TravasDBRepo {
 	return &TravasDB{
 		App: app,
 		DB:  db,

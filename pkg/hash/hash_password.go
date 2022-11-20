@@ -5,7 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(password string) (string, error) {
+func Encrypt(password string) (string, error) {
 	if password == "" {
 		return "", fmt.Errorf("no input value")
 	} else {
@@ -19,7 +19,7 @@ func HashPassword(password string) (string, error) {
 
 }
 
-func VerifyPassword(password, hashedPassword string) (bool, error) {
+func Verify(password, hashedPassword string) (bool, error) {
 	if password == "" || hashedPassword == "" {
 		return false, nil
 	}
