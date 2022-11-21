@@ -2,11 +2,13 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/travas-io/travas/model"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/hash"
+	"github.com/travas-io/travas/pkg/token"
 	"github.com/travas-io/travas/query"
 	"github.com/travas-io/travas/query/repo"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -97,6 +99,51 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 			ctx.JSON(http.StatusOK, gin.H{
 				"message": "Registered Successfully",
 			})
+		}
+
+	}
+}
+func (tr *Travas) Login() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		if err := ctx.Request.ParseForm(); err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+		}
+		email := ctx.Request.Form.Get("email")
+		password := ctx.Request.Form.Get("password")
+
+		data := tr.App.Session.Get(ctx.Request.Context(), "data").(model.IntraData)
+		verified, err := hash.Verify(password, data.Password)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("cannot verify user input password"))
+		}
+		if verified {
+			switch {
+			case email == data.Email:
+				_, checkErr := tr.DB.CheckForUser(data.ID)
+
+				if checkErr != nil {
+					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", checkErr))
+				}
+				t1, t2, err := token.Generate(data.Email, data.ID)
+				if err != nil {
+					_ = ctx.AbortWithError(http.StatusInternalServerError, fmt.Errorf("token no generated : %v ", err))
+
+				}
+
+				var tk map[string]string
+				tk = map[string]string{"t1": t1, "t2": t2}
+
+				_, updateErr := tr.DB.UpdateInfo(data.ID, tk)
+				if updateErr != nil {
+					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", updateErr))
+
+				}
+
+				ctx.Header("Content-Type", "application/json")
+				ctx.Header("Authorization", fmt.Sprintf("Bearer %v", t1))
+
+				ctx.Redirect(http.StatusSeeOther, "/user/home")
+			}
 		}
 
 	}
