@@ -31,7 +31,7 @@ func NewTravas(app *config.Tools, db *mongo.Client) *Travas {
 
 // todo -> this is where all our handler/ controller logic will be done
 
-func (tr *Travas) Home() gin.HandlerFunc {
+func (tr *Travas) Welcome() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//Todo : render the home page of the application
 		ctx.JSON(http.StatusOK, gin.H{})
@@ -103,7 +103,13 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 
 	}
 }
-func (tr *Travas) Login() gin.HandlerFunc {
+
+func (tr *Travas) LoginPage() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{})
+	}
+}
+func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := ctx.Request.ParseForm(); err != nil {
 			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
@@ -124,6 +130,7 @@ func (tr *Travas) Login() gin.HandlerFunc {
 				if checkErr != nil {
 					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", checkErr))
 				}
+				//generate the jwt token
 				t1, t2, err := token.Generate(data.Email, data.ID)
 				if err != nil {
 					_ = ctx.AbortWithError(http.StatusInternalServerError, fmt.Errorf("token no generated : %v ", err))
@@ -133,18 +140,24 @@ func (tr *Travas) Login() gin.HandlerFunc {
 				var tk map[string]string
 				tk = map[string]string{"t1": t1, "t2": t2}
 
+				//update the database adding the token to user database
 				_, updateErr := tr.DB.UpdateInfo(data.ID, tk)
 				if updateErr != nil {
 					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", updateErr))
 
 				}
-
 				ctx.Header("Content-Type", "application/json")
-				ctx.Header("Authorization", fmt.Sprintf("Bearer %v", t1))
+				ctx.Header("Authorization", fmt.Sprintf("Bearer,%v", t1))
 
 				ctx.Redirect(http.StatusSeeOther, "/user/home")
 			}
 		}
+
+	}
+}
+
+func (tr *Travas) Main() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 
 	}
 }
