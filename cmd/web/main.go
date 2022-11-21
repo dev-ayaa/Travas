@@ -62,7 +62,7 @@ func main() {
 
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
 
-	router := gin.Default()
+	router := gin.New()
 	err = router.SetTrustedProxies([]string{"127.0.0.1"})
 
 	if err != nil {
@@ -73,7 +73,7 @@ func main() {
 	Routes(router, *handler)
 
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
-	err = router.Run(port)
+	err = router.Run()
 	if err != nil {
 		app.ErrorLogger.Fatalf("cannot start the server : %v", err)
 	}
