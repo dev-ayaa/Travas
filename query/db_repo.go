@@ -9,4 +9,6 @@ import (
 
 type TravasDBRepo interface {
 	InsertUser(user model.Tourist) (int, primitive.ObjectID, error)
+	CheckForUser(userID primitive.ObjectID) (bool, error)
+	UpdateInfo(userID primitive.ObjectID, tk map[string]string) (bool, error)
 }
