@@ -3,6 +3,7 @@ package token
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
 	"os"
@@ -12,12 +13,12 @@ import (
 type TravasClaims struct {
 	jwt.RegisteredClaims
 	Email string
-	Name  string
+	ID    primitive.ObjectID
 }
 
 var secretKey = os.Getenv("TRAVAS_KEY")
 
-func GenerateToken(email, name string) (string, string, error) {
+func Generate(email string, id primitive.ObjectID) (string, string, error) {
 	travasClaims := TravasClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:   "travasAdmin",
@@ -27,7 +28,7 @@ func GenerateToken(email, name string) (string, string, error) {
 			},
 		},
 		Email: email,
-		Name:  name,
+		ID:    id,
 	}
 	refTravasClaims := &jwt.RegisteredClaims{
 		Issuer:   "travasAdmin",
@@ -47,7 +48,7 @@ func GenerateToken(email, name string) (string, string, error) {
 	return travasToken, refTravasToken, nil
 }
 
-func ParseTokenString(tokenString string) (*TravasClaims, error) {
+func Parse(tokenString string) (*TravasClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TravasClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method : %v", t.Header["alg"])
