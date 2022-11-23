@@ -2,39 +2,33 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
-	"github.com/alexedwards/scs/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/travas-io/travas/db"
+	"github.com/travas-io/travas/model"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/controller"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
-	"net/http"
 	"os"
-	"time"
 )
 
 var app config.Tools
 
-var session *scs.SessionManager
 var validate *validator.Validate
 
 func main() {
+	gob.Register(model.IntraData{})
+	gob.Register(model.Tourist{})
+	gob.Register(model.Tour{})
 
 	err := godotenv.Load()
 	if err != nil {
 		app.ErrorLogger.Fatalf("cannot load up the env file : %v", err)
 	}
-
-	session = scs.New()
-	session.Lifetime = 24 * time.Hour
-	session.Cookie.HttpOnly = true
-	session.Cookie.Persist = true
-	session.Cookie.SameSite = http.SameSiteStrictMode
-	session.Cookie.Secure = true
 
 	validate = validator.New()
 	ErrorLogger := log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
@@ -42,7 +36,6 @@ func main() {
 
 	app.ErrorLogger = ErrorLogger
 	app.InfoLogger = InfoLogger
-	app.Session = session
 	app.Validator = validate
 
 	port := os.Getenv("PORT")

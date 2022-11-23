@@ -1,37 +1,41 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/travas-io/travas/pkg/token"
-	"net/http"
-	"strings"
 )
 
 func Authorization() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var authToken string
-		value := ctx.GetHeader("Authorization")
-		if value == "" {
+		c, err := ctx.Request.Cookie("authorization")
+		if err != nil {
+			if err == http.ErrNoCookie {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+		}
+		tokenString := c.Value
+
+		if tokenString == "" {
 			_ = ctx.AbortWithError(http.StatusNoContent, errors.New("no value for authorization header"))
 		}
-		valSlices := strings.Split(value, ",")
-		if valSlices[0] == "Bearer" && len(valSlices[1]) > 1 {
-			authToken = valSlices[1]
-		}
-		parse, err := token.Parse(authToken)
+		fmt.Println(tokenString)
+		// valSlices := strings.Split(value, ",")
+		// if valSlices[0] == "Bearer" && len(valSlices[1]) > 1 {
+		// 	authToken = valSlices[1]
+		// }
+		parse, err := token.Parse(tokenString)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusUnauthorized, gin.Error{Err: err})
 		}
-		ctx.Set("pass", authToken)
+		ctx.Set("pass", tokenString)
 		ctx.Set("id", parse.ID)
 		ctx.Set("email", parse.Email)
 		ctx.Next()
 	}
 }
 
-func LoadAndSave(next http.Handler) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		session.LoadAndSave(next)
-	}
-}
