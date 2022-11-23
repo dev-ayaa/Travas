@@ -1,13 +1,13 @@
 package token
 
 import (
-	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TravasClaims struct {
@@ -50,9 +50,6 @@ func Generate(email string, id primitive.ObjectID) (string, string, error) {
 
 func Parse(tokenString string) (*TravasClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TravasClaims{}, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method : %v", t.Header["alg"])
-		}
 		return []byte(secretKey), nil
 	})
 	if err != nil {
