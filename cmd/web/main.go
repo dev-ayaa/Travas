@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -12,8 +15,6 @@ import (
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/controller"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
-	"os"
 )
 
 var app config.Tools
@@ -26,9 +27,11 @@ func main() {
 	gob.Register(model.Tour{})
 
 	err := godotenv.Load()
-	if err != nil {
-		app.ErrorLogger.Fatalf("cannot load up the env file : %v", err)
-	}
+	/*
+		if err != nil {
+			app.ErrorLogger.Fatalf("cannot load up the env file : %v", err)
+		}
+	*/
 
 	validate = validator.New()
 	ErrorLogger := log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
@@ -67,7 +70,9 @@ func main() {
 
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
 	err = router.Run()
-	if err != nil {
-		app.ErrorLogger.Fatalf("cannot start the server : %v", err)
-	}
+	/*
+		if err != nil {
+			app.ErrorLogger.Fatalf("cannot start the server : %v", err)
+		}
+	*/
 }
