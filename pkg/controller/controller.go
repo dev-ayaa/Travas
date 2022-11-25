@@ -222,6 +222,20 @@ func (tr *Travas) DeleteTour() gin.HandlerFunc {
 
 }
 
+func (tr *Travas) GetTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		tour, err := tr.DB.GetTour(id)
+		if err != nil {
+			ctx.JSON(404, gin.H{"message": "tour not found", "error": err.Error()})
+			ctx.Abort()
+		} else {
+			ctx.JSON(200, gin.H{"data": tour})
+		}
+	}
+
+}
+
 func (tr *Travas) UpdateTour() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		id := ctx.Param("id")
@@ -240,6 +254,18 @@ func (tr *Travas) UpdateTour() gin.HandlerFunc {
 		}
 		ctx.JSON(200, gin.H{"message": "tour updated"})
 
+	}
+
+}
+func (tr *Travas) GetAllTours() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		list, err := tr.DB.FindAllTours()
+		if err != nil {
+			ctx.JSON(404, gin.H{"message": "Find Error", "error": err.Error()})
+			ctx.Abort()
+		} else {
+			ctx.JSON(200, gin.H{"data": list})
+		}
 	}
 
 }

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/travas-io/travas/model"
@@ -88,7 +89,35 @@ func (td *TravasDB) UpdateTour(tourID string, tour model.Tour) (bool, error) {
 	}
 	return true, nil
 }
+func (td *TravasDB) GetTour(tourID string) (tour model.Tour, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "_id", Value: tourID}}
+	err = TouristData(td.DB, "tours").FindOne(ctx, filter).Decode(&tour)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			td.App.ErrorLogger.Println("no document found for this query")
+		}
+		td.App.ErrorLogger.Fatalf("cannot execute the database query perfectly : %v ", err)
+	}
+	return tour, err
+}
+func (td *TravasDB) FindAllTours() (tours []model.Tour, err error) {
+	//	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	//	defer cancel()
+	cur, err := TouristData(td.DB, "tours").Find(context.Background(), bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cur.Close(context.Background())
 
+	if err = cur.All(context.Background(), &tours); err != nil {
+		log.Fatal(err)
+	}
+
+	return tours, err
+
+}
 func (td *TravasDB) InsertUser(user model.Tourist, tours []model.Tour) (int, primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()

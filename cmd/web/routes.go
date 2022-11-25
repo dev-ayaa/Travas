@@ -23,6 +23,8 @@ func Routes(r *gin.Engine, t controller.Travas) {
 	router.POST("/api/tour/create", t.CreateTour())
 	router.DELETE("/api/tour/delete/:id", t.DeleteTour())
 	router.PUT("/api/tour/update/:id", t.UpdateTour())
+	router.GET("/api/tour/tours", t.GetAllTours())
+	router.GET("/api/tour/:id", t.GetTour())
 	protectRouter := r.Group("/api/auth")
 	protectRouter.Use(Authorization())
 	{

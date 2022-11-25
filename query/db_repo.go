@@ -14,4 +14,6 @@ type TravasDBRepo interface {
 	InsertTour(tour model.Tour, tours []model.Tour) (int, primitive.ObjectID, error)
 	DeleteTour(tourID string) (bool, error)
 	UpdateTour(tourID string, tour model.Tour) (bool, error)
+	GetTour(tourID string) (tour model.Tour, err error)
+	FindAllTours() (tours []model.Tour, err error)
 }
