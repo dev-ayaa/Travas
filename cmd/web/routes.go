@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
+	"github.com/gorilla/mux"
 	"github.com/travas-io/travas/pkg/controller"
 )
 
@@ -13,18 +14,25 @@ func Routes(r *gin.Engine, t controller.Travas) {
 	router.Use(cors.Default())
 
 	cookieData := cookie.NewStore([]byte("travas"))
-	
+
 	router.Use(sessions.Sessions("session", cookieData))
 	router.GET("/", t.Welcome())
 	router.GET("/api/register", t.Register())
 	router.POST("/api/user/register", t.ProcessRegister())
 	router.GET("/api/user/sign-in", t.LoginPage())
 	router.POST("/api/user/sign-in", t.ProcessLogin())
-
 	protectRouter := r.Group("/api/auth")
 	protectRouter.Use(Authorization())
 	{
 		protectRouter.GET("/user/home", t.Main())
 	}
+
+}
+func ToursRoutes(r *mux.Router) {
+	r.HandleFunc("/api/tour/tours", controller.AllToursEndPoint).Methods("GET")
+	r.HandleFunc("/api/tour/add-tour", controller.CreateTourEndPoint).Methods("POST")
+	r.HandleFunc("/api/tour/update-tour", controller.UpdateTourEndPoint).Methods("PUT")
+	r.HandleFunc("/api/tour/delete-tour", controller.DeleteUserEndPoint).Methods("DELETE")
+	r.HandleFunc("/api/tour/{id}", controller.FindTourEndpoint).Methods("GET")
 
 }

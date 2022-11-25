@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 	"github.com/travas-io/travas/model"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/hash"
@@ -17,6 +19,7 @@ import (
 	"github.com/travas-io/travas/query"
 	"github.com/travas-io/travas/query/repo"
 	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Travas struct {
@@ -31,8 +34,75 @@ func NewTravas(app *config.Tools, db *mongo.Client) *Travas {
 	}
 }
 
+var operations = repo.Operators_Struct{}
+
 // todo -> this is where all our handler/ controller logic will be done
 
+func AllToursEndPoint(w http.ResponseWriter, r *http.Request) {
+	tours, err := operations.FindAllTours()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusOK, tours)
+}
+
+// GET a tour by its ID
+func FindTourEndpoint(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	tour, err := operations.FindTourById(params["id"])
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
+		return
+	}
+	respondWithJson(w, http.StatusOK, tour)
+}
+
+// POST a new tour
+func CreateTourEndPoint(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var tour model.Tour
+	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	tour.ID = bson.NewObjectId()
+	if err := operations.InsertTour(tour); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusCreated, tour)
+}
+
+// PUT update an existing user
+func UpdateTourEndPoint(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var tour model.Tour
+	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if err := operations.UpdateTour(tour); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+// DELETE an existing user
+func DeleteUserEndPoint(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var tour model.Tour
+	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if err := operations.DeleteTour(tour); err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
+}
 func (tr *Travas) Welcome() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Todo : render the home page of the application
@@ -172,4 +242,15 @@ func (tr *Travas) Main() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
 	}
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) {
+	respondWithJson(w, code, map[string]string{"error": msg})
+}
+
+func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }

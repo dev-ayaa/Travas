@@ -8,9 +8,49 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	mgo "gopkg.in/mgo.v2"
+	//	"gopkg.in/mgo.v2/bson"
 )
 
+var Db *mgo.Database
+
 // database queries is done in this file
+
+// tours operations struct
+type Operators_Struct struct {
+}
+
+// Find list of movies
+func (m *Operators_Struct) FindAllTours() ([]model.Tour, error) {
+	var tour []model.Tour
+	err := Db.C("tours").Find(bson.M{}).All(&tour)
+	return tour, err
+}
+
+// Find a movie by its id
+func (m *Operators_Struct) FindTourById(id string) (model.Tour, error) {
+	var tour model.Tour
+	err := Db.C("tours").FindId(id).One(&tour)
+	return tour, err
+}
+
+// Insert a movie into database
+func (m *Operators_Struct) InsertTour(tour model.Tour) error {
+	err := Db.C("tours").Insert(&tour)
+	return err
+}
+
+// Delete an existing movie
+func (m *Operators_Struct) DeleteTour(tour model.Tour) error {
+	err := Db.C("tours").Remove(&tour)
+	return err
+}
+
+// Update an existing movie
+func (m *Operators_Struct) UpdateTour(tour model.Tour) error {
+	err := Db.C("tours").UpdateId(tour.ID, &tour)
+	return err
+}
 
 func (td *TravasDB) InsertUser(user model.Tourist, tours []model.Tour) (int, primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
@@ -26,7 +66,7 @@ func (td *TravasDB) InsertUser(user model.Tourist, tours []model.Tour) (int, pri
 		if err == mongo.ErrNoDocuments {
 			user.ID = primitive.NewObjectID()
 			doc := bson.D{
-				{Key:"_id", Value:user.ID},
+				{Key: "_id", Value: user.ID},
 				{Key: "email", Value: user.Email},
 				{Key: "first_name", Value: user.FirstName},
 				{Key: "last_name", Value: user.LastName},
