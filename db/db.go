@@ -26,12 +26,11 @@ func Connection(uri string) *mongo.Client {
 		}
 	*/
 
-	_ = client.Ping(ctx, nil)
-	/*
-		if err != nil {
-			app.ErrorLogger.Fatalln(err)
-		}
-	*/
+	err := client.Ping(ctx, nil)
+
+	if err != nil {
+		app.ErrorLogger.Fatalln(err)
+	}
 
 	return client
 }

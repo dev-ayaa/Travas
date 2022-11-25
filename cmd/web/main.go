@@ -5,12 +5,14 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
-	"net/http"
+
+	//	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
+
+	//	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/travas-io/travas/db"
 	"github.com/travas-io/travas/model"
@@ -72,11 +74,14 @@ func main() {
 
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
 	err = router.Run()
-	r := mux.NewRouter()
-	ToursRoutes(r)
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatal(err)
-	}
+	/*
+		//r := mux.NewRouter()
+		//ToursRoutes(r)
+
+		if err := http.ListenAndServe(":8080", r); err != nil {
+			log.Fatal(err)
+		}
+	*/
 
 	/*
 		if err != nil {

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"gopkg.in/mgo.v2/bson"
+	//"gopkg.in/mgo.v2/bson"
 )
 
 type Tourist struct {
@@ -40,18 +40,18 @@ type Operators struct {
 }
 
 type Tour struct {
-	ID              bson.ObjectId `json:"_id"`
-	OperatorID      string        `json:"operator_id"`
-	TourTitle       string        `json:"tour_title"`
-	MeetingPoint    string        `json:"meeting_point"`
-	StartTime       string        `json:"start_time"`
-	LanguageOffered string        `json:"language_offered"`
-	NumberOfTourist string        `json:"number_of_tourist"`
-	Description     string        `json:"description"`
-	TourGuide       string        `json:"tour_guide"`
-	TourOperator    string        `json:"tour_operator"`
-	OperatorContact string        `json:"operator_contact"`
-	Date            string        `json:"date"`
+	ID              primitive.ObjectID `json:"_id"`
+	OperatorID      string             `json:"operator_id"`
+	TourTitle       string             `json:"tour_title"`
+	MeetingPoint    string             `json:"meeting_point"`
+	StartTime       string             `json:"start_time"`
+	LanguageOffered string             `json:"language_offered"`
+	NumberOfTourist string             `json:"number_of_tourist"`
+	Description     string             `json:"description"`
+	TourGuide       string             `json:"tour_guide"`
+	TourOperator    string             `json:"tour_operator"`
+	OperatorContact string             `json:"operator_contact"`
+	Date            string             `json:"date"`
 }
 
 type IntraData struct {

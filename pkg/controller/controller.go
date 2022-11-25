@@ -11,7 +11,8 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
+
+	//	"github.com/gorilla/mux"
 	"github.com/travas-io/travas/model"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/hash"
@@ -19,7 +20,7 @@ import (
 	"github.com/travas-io/travas/query"
 	"github.com/travas-io/travas/query/repo"
 	"go.mongodb.org/mongo-driver/mongo"
-	"gopkg.in/mgo.v2/bson"
+	//	"gopkg.in/mgo.v2/bson"
 )
 
 type Travas struct {
@@ -34,75 +35,6 @@ func NewTravas(app *config.Tools, db *mongo.Client) *Travas {
 	}
 }
 
-var operations = repo.Operators_Struct{}
-
-// todo -> this is where all our handler/ controller logic will be done
-
-func AllToursEndPoint(w http.ResponseWriter, r *http.Request) {
-	tours, err := operations.FindAllTours()
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJson(w, http.StatusOK, tours)
-}
-
-// GET a tour by its ID
-func FindTourEndpoint(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	tour, err := operations.FindTourById(params["id"])
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
-		return
-	}
-	respondWithJson(w, http.StatusOK, tour)
-}
-
-// POST a new tour
-func CreateTourEndPoint(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var tour model.Tour
-	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	tour.ID = bson.NewObjectId()
-	if err := operations.InsertTour(tour); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJson(w, http.StatusCreated, tour)
-}
-
-// PUT update an existing user
-func UpdateTourEndPoint(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var tour model.Tour
-	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	if err := operations.UpdateTour(tour); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
-}
-
-// DELETE an existing user
-func DeleteUserEndPoint(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var tour model.Tour
-	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-	if err := operations.DeleteTour(tour); err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
-}
 func (tr *Travas) Welcome() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Todo : render the home page of the application
@@ -242,6 +174,74 @@ func (tr *Travas) Main() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
 	}
+}
+
+func (tr *Travas) CreateTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var tour model.Tour
+		if err := ctx.Request.ParseForm(); err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+		}
+		tour.OperatorID = ctx.Request.Form.Get("operator_id")
+		tour.TourTitle = ctx.Request.Form.Get("tour_title")
+		tour.MeetingPoint = ctx.Request.Form.Get("meeting_point")
+		tour.StartTime = ctx.Request.Form.Get("start_time")
+		tour.LanguageOffered = ctx.Request.Form.Get("language_offered")
+		tour.NumberOfTourist = ctx.Request.Form.Get("number_of_tourist")
+		tour.Description = ctx.Request.Form.Get("description")
+		tour.TourGuide = ctx.Request.Form.Get("tour_guide")
+		tour.TourOperator = ctx.Request.Form.Get("tour_operator")
+		tour.OperatorContact = ctx.Request.Form.Get("operator_contact")
+		tour.Date = ctx.Request.Form.Get("date")
+
+		tours := []model.Tour{}
+		_, tourID, err := tr.DB.InsertTour(tour, tours)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, errors.New("error while adding new user"))
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"CreatedTour_ID": tourID,
+		})
+
+	}
+}
+
+func (tr *Travas) DeleteTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		_, err := tr.DB.DeleteTour(id)
+		if err != nil {
+			ctx.JSON(406, gin.H{"message": "Tour could not be deleted", "error": err.Error()})
+			ctx.Abort()
+			return
+		}
+		ctx.JSON(200, gin.H{"message": "Tour deleted"})
+	}
+
+}
+
+func (tr *Travas) UpdateTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		tour := model.Tour{}
+
+		if ctx.BindJSON(&tour) != nil {
+			ctx.JSON(406, gin.H{"message": "Invalid Parameters"})
+			ctx.Abort()
+			return
+		}
+		_, err := tr.DB.UpdateTour(id, tour)
+		if err != nil {
+			ctx.JSON(406, gin.H{"message": "tour count not be updated", "error": err.Error()})
+			ctx.Abort()
+			return
+		}
+		ctx.JSON(200, gin.H{"message": "tour updated"})
+
+	}
+
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {

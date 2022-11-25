@@ -8,48 +8,85 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	mgo "gopkg.in/mgo.v2"
-	//	"gopkg.in/mgo.v2/bson"
 )
-
-var Db *mgo.Database
 
 // database queries is done in this file
 
-// tours operations struct
-type Operators_Struct struct {
+func (td *TravasDB) InsertTour(tour model.Tour, tours []model.Tour) (int, primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var id primitive.ObjectID
+
+	filter := bson.D{{Key: "tour_title", Value: tour.TourTitle}}
+	var res bson.M
+	err := TouristData(td.DB, "tours").FindOne(ctx, filter).Decode(&res)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			tour.ID = primitive.NewObjectID()
+			doc := bson.D{
+				{Key: "_id", Value: tour.ID},
+				{Key: "operator_id", Value: tour.OperatorID},
+				{Key: "tour_title", Value: tour.TourTitle},
+				{Key: "meeeting_point", Value: tour.MeetingPoint},
+				{Key: "start_time", Value: tour.StartTime},
+				{Key: "language_offered", Value: tour.LanguageOffered},
+				{Key: "number_of_tourist", Value: tour.NumberOfTourist},
+				{Key: "description", Value: tour.Description},
+				{Key: "tour_guide", Value: tour.TourGuide},
+				{Key: "tour_operator", Value: tour.TourOperator},
+				{Key: "operator_contact", Value: tour.OperatorContact},
+				{Key: "date", Value: tour.Date},
+			}
+			_, insertErr := TouristData(td.DB, "tours").InsertOne(ctx, doc)
+			if insertErr != nil {
+				td.App.ErrorLogger.Fatalf("cannot add user to the database : %v ", insertErr)
+			}
+			return 0, tour.ID, nil
+		}
+		td.App.ErrorLogger.Fatal(err)
+	}
+
+	for k, v := range res {
+		if k == "_id" {
+			switch tourID := v.(type) {
+			case primitive.ObjectID:
+				id = tourID
+			}
+		}
+	}
+	return 1, id, err
 }
 
-// Find list of movies
-func (m *Operators_Struct) FindAllTours() ([]model.Tour, error) {
-	var tour []model.Tour
-	err := Db.C("tours").Find(bson.M{}).All(&tour)
-	return tour, err
+func (td *TravasDB) DeleteTour(tourID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var result bson.M
+
+	filter := bson.D{{Key: "_id", Value: tourID}}
+	err := TouristData(td.DB, "tours").FindOneAndDelete(ctx, filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			td.App.ErrorLogger.Println("no document found for this query")
+			return false, err
+		}
+		td.App.ErrorLogger.Fatalf("cannot execute the database query perfectly : %v ", err)
+	}
+	// td.App.InfoLogger.Printf("found document %v", result)
+	return true, nil
 }
 
-// Find a movie by its id
-func (m *Operators_Struct) FindTourById(id string) (model.Tour, error) {
-	var tour model.Tour
-	err := Db.C("tours").FindId(id).One(&tour)
-	return tour, err
-}
+func (td *TravasDB) UpdateTour(tourID string, tour model.Tour) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
 
-// Insert a movie into database
-func (m *Operators_Struct) InsertTour(tour model.Tour) error {
-	err := Db.C("tours").Insert(&tour)
-	return err
-}
-
-// Delete an existing movie
-func (m *Operators_Struct) DeleteTour(tour model.Tour) error {
-	err := Db.C("tours").Remove(&tour)
-	return err
-}
-
-// Update an existing movie
-func (m *Operators_Struct) UpdateTour(tour model.Tour) error {
-	err := Db.C("tours").UpdateId(tour.ID, &tour)
-	return err
+	filter := bson.D{{Key: "_id", Value: tourID}}
+	_, err := TouristData(td.DB, "tours").UpdateByID(ctx, filter, tour)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (td *TravasDB) InsertUser(user model.Tourist, tours []model.Tour) (int, primitive.ObjectID, error) {
