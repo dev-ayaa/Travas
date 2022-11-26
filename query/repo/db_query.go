@@ -26,7 +26,7 @@ func (td *TravasDB) InsertUser(user model.Tourist, tours []model.Tour) (int, pri
 		if err == mongo.ErrNoDocuments {
 			user.ID = primitive.NewObjectID()
 			doc := bson.D{
-				{Key:"_id", Value:user.ID},
+				{Key: "_id", Value: user.ID},
 				{Key: "email", Value: user.Email},
 				{Key: "first_name", Value: user.FirstName},
 				{Key: "last_name", Value: user.LastName},
@@ -75,7 +75,7 @@ func (td *TravasDB) CheckForUser(userID primitive.ObjectID) (bool, error) {
 		}
 		td.App.ErrorLogger.Fatalf("cannot execute the database query perfectly : %v ", err)
 	}
-	// td.App.InfoLogger.Printf("found document %v", result)
+
 	return true, nil
 }
 

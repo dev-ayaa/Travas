@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
+	"log"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -12,8 +14,6 @@ import (
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/controller"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
-	"os"
 )
 
 var app config.Tools
@@ -38,9 +38,9 @@ func main() {
 	app.InfoLogger = InfoLogger
 	app.Validator = validate
 
-	port := os.Getenv("PORT")
+	// port := os.Getenv("PORT")
 	uri := os.Getenv("TRAVAS_DB_URI")
-	fmt.Println(port, uri)
+	// fmt.Println(port, uri)
 	app.InfoLogger.Println("*---------- Connecting to the travas cloud database --------")
 
 	client := db.Connection(uri)
@@ -49,7 +49,8 @@ func main() {
 	defer func(client *mongo.Client, ctx context.Context) {
 		err := client.Disconnect(ctx)
 		if err != nil {
-
+			app.ErrorLogger.Println(err)
+			return
 		}
 	}(client, context.TODO())
 
