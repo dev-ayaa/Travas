@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -194,8 +193,7 @@ func (tr *Travas) CreateTour() gin.HandlerFunc {
 		tour.OperatorContact = ctx.Request.Form.Get("operator_contact")
 		tour.Date = ctx.Request.Form.Get("date")
 
-		tours := []model.Tour{}
-		_, tourID, err := tr.DB.InsertTour(tour, tours)
+		tourID, err := tr.DB.InsertTour(tour)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusBadRequest, errors.New("error while adding new user"))
 			return
@@ -203,6 +201,7 @@ func (tr *Travas) CreateTour() gin.HandlerFunc {
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"CreatedTour_ID": tourID,
+			"data":           tour,
 		})
 
 	}
@@ -268,15 +267,4 @@ func (tr *Travas) GetAllTours() gin.HandlerFunc {
 		}
 	}
 
-}
-
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	respondWithJson(w, code, map[string]string{"error": msg})
-}
-
-func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
 }

@@ -13,7 +13,7 @@ import (
 
 // database queries is done in this file
 
-func (td *TravasDB) InsertTour(tour model.Tour, tours []model.Tour) (int, primitive.ObjectID, error) {
+func (td *TravasDB) InsertTour(tour model.Tour) (primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
@@ -43,7 +43,7 @@ func (td *TravasDB) InsertTour(tour model.Tour, tours []model.Tour) (int, primit
 			if insertErr != nil {
 				td.App.ErrorLogger.Fatalf("cannot add user to the database : %v ", insertErr)
 			}
-			return 0, tour.ID, nil
+			return tour.ID, nil
 		}
 		td.App.ErrorLogger.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func (td *TravasDB) InsertTour(tour model.Tour, tours []model.Tour) (int, primit
 			}
 		}
 	}
-	return 1, id, err
+	return id, err
 }
 
 func (td *TravasDB) DeleteTour(tourID string) (bool, error) {
