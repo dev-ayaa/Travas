@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,7 @@ func Authorization() gin.HandlerFunc {
 		c, err := ctx.Request.Cookie("authorization")
 		if err != nil {
 			if err == http.ErrNoCookie {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
+				ctx.AbortWithStatus(http.StatusUnauthorized)
 				return
 			}
 		}
@@ -23,11 +22,8 @@ func Authorization() gin.HandlerFunc {
 		if tokenString == "" {
 			_ = ctx.AbortWithError(http.StatusNoContent, errors.New("no value for authorization header"))
 		}
-		fmt.Println(tokenString)
-		// valSlices := strings.Split(value, ",")
-		// if valSlices[0] == "Bearer" && len(valSlices[1]) > 1 {
-		// 	authToken = valSlices[1]
-		// }
+		//fmt.Println(tokenString)
+
 		parse, err := token.Parse(tokenString)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusUnauthorized, gin.Error{Err: err})
@@ -38,4 +34,3 @@ func Authorization() gin.HandlerFunc {
 		ctx.Next()
 	}
 }
-
