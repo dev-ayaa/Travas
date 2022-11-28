@@ -1,0 +1,28 @@
+
+
+POST http://localhost:8080/api/user/register
+Content-Type: application/x-www-form-urlencoded
+
+first_name=Abdulsalam&last_name=John&email=abdulsalamjohn@gmail.com&password=_abdulsalam1001_&check_password=_abdulsalam1001_&phone=+2347098921114
+
+###
+
+POST http://localhost:8080/api/user/sign-in
+Content-Type: application/x-www-form-urlencoded
+
+email=abdulsalamjohn@gmail.com&password=_abdulsalam1001_
+
+###
+
+GET http://localhost:8080/api/auth/user/home
+
+
+### Json format for content-type
+###{
+###  "first_name": "Abdulsalam",
+###  "last_name": "John",
+###  "email": "abdulsalamjohn@gmail.com",
+###  "password": "_abdulsalam1001_",
+###  "check_password": "_abdulsalam1001_",
+### "phone": "+2347098921114"
+###}
