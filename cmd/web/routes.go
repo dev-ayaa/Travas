@@ -20,15 +20,18 @@ func Routes(r *gin.Engine, t controller.Travas) {
 	router.POST("/api/user/register", t.ProcessRegister())
 	router.GET("/api/user/sign-in", t.LoginPage())
 	router.POST("/api/user/sign-in", t.ProcessLogin())
-	router.POST("/api/tour/create", t.CreateTour())
-	router.DELETE("/api/tour/delete/:id", t.DeleteTour())
-	router.PUT("/api/tour/update/:id", t.UpdateTour())
-	router.GET("/api/tour/tours", t.GetAllTours())
-	router.GET("/api/tour/:id", t.GetTour())
+	//router.POST("/api/tour/create", t.CreateTour())
+	//router.DELETE("/api/tour/delete/:id", t.DeleteTour())
+	//router.PUT("/api/tour/update/:id", t.UpdateTour())
+	//router.GET("/api/tour/tours", t.GetAllTours())
+	//router.GET("/api/tour/:id", t.GetTour())
 	protectRouter := r.Group("/api/auth")
 	protectRouter.Use(Authorization())
 	{
-		protectRouter.GET("/user/home", t.Main())
+		protectRouter.GET("/user/home", t.UserMainPage())
+		protectRouter.GET("/user/select/package", t.SelectTour())
+		protectRouter.POST("/user/book/package", t.BookTour())
+
 	}
 
 }
