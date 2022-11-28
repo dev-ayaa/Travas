@@ -4,57 +4,57 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	//"gopkg.in/mgo.v2/bson"
 )
 
 type Tourist struct {
-	ID            primitive.ObjectID `json:"_id" bson:"_id"`
-	FirstName     string             `json:"first_name" Usage:"required,alpha" json:"name,omitempty"`
-	LastName      string             `json:"last_name" Usage:"required,alpha" json:"name,omitempty"`
-	Email         string             `json:"email" Usage:"required,alphanumeric"`
-	Password      string             `json:"password" Usage:"required"`
-	CheckPassword string             `json:"check_password" Usage:"required"`
-	Phone         string             `json:"phone" Usage:"required"`
-	ReservedTours []Tour             `json:"tours_list"`
-	GeoLocation   string             `json:"geo_location"`
-	Token         string             `json:"token" Usage:"jwt"`
-	NewToken      string             `json:"new_token" Usage:"jwt"`
-	CreatedAt     time.Time          `json:"created_at" Usage:"datetime"`
-	UpdatedAt     time.Time          `json:"updated_at" Usage:"datetime"`
+	ID            primitive.ObjectID `bson:"_id"`
+	FirstName     string             `bson:"first_name" Usage:"required,alpha,omitempty"`
+	LastName      string             `bson:"last_name" Usage:"required,alpha,omitempty"`
+	Email         string             `bson:"email" Usage:"required,alphanumeric"`
+	Password      string             `bson:"password" Usage:"required"`
+	CheckPassword string             `bson:"check_password" Usage:"required"`
+	Phone         string             `bson:"phone" Usage:"required"`
+	BookedTours   []Tour             `bson:"booked_tours"`
+	RequestTours  []Tour             `bson:"request_tours"`
+	GeoLocation   string             `bson:"geo_location"`
+	Token         string             `bson:"token" Usage:"jwt"`
+	NewToken      string             `bson:"new_token" Usage:"jwt"`
+	CreatedAt     time.Time          `bson:"created_at" Usage:"datetime"`
+	UpdatedAt     time.Time          `bson:"updated_at" Usage:"datetime"`
 }
 
-type Operators struct {
-	ID            primitive.ObjectID `json:"_id" bson:"_id"`
-	FirstName     string             `json:"first_name" Usage:"required,alpha" json:"name,omitempty"`
-	LastName      string             `json:"last_name" Usage:"required,alpha" json:"name,omitempty"`
-	Email         string             `json:"email" Usage:"required,alphanumeric"`
-	Password      string             `json:"password" Usage:"required"`
-	CheckPassword string             `json:"check_password" Usage:"required"`
-	Phone         string             `json:"phone" Usage:"required"`
-	ToursList     []Tour             `json:"tours_list"`
-	GeoLocation   string             `json:"geo_location"`
-	Token         string             `json:"token" Usage:"jwt"`
-	NewToken      string             `json:"new_token" Usage:"jwt"`
-	CreatedAt     time.Time          `json:"created_at" Usage:"datetime"`
-	UpdatedAt     time.Time          `json:"updated_at" Usage:"datetime"`
+type Operator struct {
+	ID            primitive.ObjectID `bson:"_id"`
+	FirstName     string             `bson:"first_name" Usage:"required,alpha,omitempty"`
+	LastName      string             `bson:"last_name" Usage:"required,alpha,omitempty"`
+	Email         string             `bson:"email" Usage:"required,alphanumeric"`
+	Password      string             `bson:"password" Usage:"required"`
+	CheckPassword string             `bson:"check_password" Usage:"required"`
+	Phone         string             `bson:"phone" Usage:"required"`
+	ToursList     []Tour             `bson:"tours_list"`
+	GeoLocation   string             `bson:"geo_location"`
+	Token         string             `bson:"token" Usage:"jwt"`
+	NewToken      string             `bson:"new_token" Usage:"jwt"`
+	CreatedAt     time.Time          `bson:"created_at" Usage:"datetime"`
+	UpdatedAt     time.Time          `bson:"updated_at" Usage:"datetime"`
 }
 
 type Tour struct {
-	ID              primitive.ObjectID `json:"_id"`
-	OperatorID      string             `json:"operator_id"`
-	TourTitle       string             `json:"tour_title"`
-	MeetingPoint    string             `json:"meeting_point"`
-	StartTime       string             `json:"start_time"`
-	LanguageOffered string             `json:"language_offered"`
-	NumberOfTourist string             `json:"number_of_tourist"`
-	Description     string             `json:"description"`
-	TourGuide       string             `json:"tour_guide"`
-	TourOperator    string             `json:"tour_operator"`
-	OperatorContact string             `json:"operator_contact"`
-	Date            string             `json:"date"`
+	ID              primitive.ObjectID `bson:"_id"`
+	OperatorID      string             `bson:"operator_id"`
+	TourTitle       string             `bson:"tour_title"`
+	MeetingPoint    string             `bson:"meeting_point"`
+	StartTime       string             `bson:"start_time"`
+	LanguageOffered string             `bson:"language_offered"`
+	NumberOfTourist string             `bson:"number_of_tourist"`
+	Description     string             `bson:"description"`
+	TourGuide       string             `bson:"tour_guide"`
+	TourOperator    string             `bson:"tour_operator"`
+	OperatorContact string             `bson:"operator_contact"`
+	Date            string             `bson:"date"`
 }
 
-type IntraData struct {
+type UserInfo struct {
 	ID       primitive.ObjectID
 	Email    string
 	Password string
