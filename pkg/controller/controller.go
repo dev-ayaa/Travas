@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	//	"github.com/gorilla/mux"
 	"github.com/travas-io/travas/model"
 	"github.com/travas-io/travas/pkg/config"
 	"github.com/travas-io/travas/pkg/hash"
@@ -19,7 +19,6 @@ import (
 	"github.com/travas-io/travas/query"
 	"github.com/travas-io/travas/query/repo"
 	"go.mongodb.org/mongo-driver/mongo"
-	//	"gopkg.in/mgo.v2/bson"
 )
 
 type Travas struct {
@@ -34,6 +33,7 @@ func NewTravas(app *config.Tools, db *mongo.Client) *Travas {
 	}
 }
 
+// Welcome : This method render the welcome page of the flutter mobile application
 func (tr *Travas) Welcome() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Todo : render the home page of the application
@@ -41,12 +41,15 @@ func (tr *Travas) Welcome() gin.HandlerFunc {
 	}
 }
 
+// Register : this Handler will render and show the register page for user
 func (tr *Travas) Register() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
 
+// ProcessRegister : As the name implies , this method will help to process all the registration process
+// of the user
 func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var user model.Tourist
@@ -62,6 +65,9 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 		user.CheckPassword = ctx.Request.Form.Get("check_password")
 		user.CreatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		user.UpdatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+		user.Token = ""
+		user.NewToken = ""
+		user.BookedTours = []model.Tour{}
 
 		if user.Password != user.CheckPassword {
 			_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("passwords did not match"))
@@ -77,20 +83,20 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 				return
 			}
 		}
-		tours := []model.Tour{}
-		track, userID, err := tr.DB.InsertUser(user, tours)
+
+		track, userID, err := tr.DB.InsertUser(user)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusBadRequest, errors.New("error while adding new user"))
 			return
 		}
 		cookieData := sessions.Default(ctx)
 
-		data := model.IntraData{
+		userInfo := model.UserInfo{
 			ID:       userID,
 			Email:    user.Email,
 			Password: user.Password,
 		}
-		cookieData.Set("data", data)
+		cookieData.Set("info", userInfo)
 
 		if err := cookieData.Save(); err != nil {
 			log.Println("error from the session storage")
@@ -116,11 +122,15 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 	}
 }
 
+// LoginPage : this will show the login page for user
 func (tr *Travas) LoginPage() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
+
+// ProcessLogin : this method will help to parse, verify, and as well as authenticate the user
+// login details, and it also helps to generate jwt token for restricted routers
 
 func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -131,22 +141,22 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 		password := ctx.Request.Form.Get("password")
 
 		cookieData := sessions.Default(ctx)
-		data := cookieData.Get("data").(model.IntraData)
+		userInfo := cookieData.Get("info").(model.UserInfo)
 
-		verified, err := hash.Verify(password, data.Password)
+		verified, err := hash.Verify(password, userInfo.Password)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("cannot verify user input password"))
 		}
 		if verified {
 			switch {
-			case email == data.Email:
-				_, checkErr := tr.DB.CheckForUser(data.ID)
+			case email == userInfo.Email:
+				_, checkErr := tr.DB.CheckForUser(userInfo.ID)
 
 				if checkErr != nil {
 					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", checkErr))
 				}
 				// generate the jwt token
-				t1, t2, err := token.Generate(data.Email, data.ID)
+				t1, t2, err := token.Generate(userInfo.Email, userInfo.ID)
 				if err != nil {
 					_ = ctx.AbortWithError(http.StatusInternalServerError, fmt.Errorf("token no generated : %v ", err))
 				}
@@ -155,7 +165,7 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 				tk = map[string]string{"t1": t1, "t2": t2}
 
 				// update the database adding the token to user database
-				_, updateErr := tr.DB.UpdateInfo(data.ID, tk)
+				_, updateErr := tr.DB.UpdateInfo(userInfo.ID, tk)
 				if updateErr != nil {
 					_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("unregistered user %v", updateErr))
 				}
@@ -163,108 +173,81 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 				ctx.SetCookie("authorization", t1, 60*60*24*7, "/", "localhost", false, true)
 				ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
 
-				// ctx.Redirect(http.StatusSeeOther, "api/auth/user/home")
 			}
 		}
 	}
 }
 
-func (tr *Travas) Main() gin.HandlerFunc {
+// UserMainPage : what this method does :  it extracts data from the tour operator database for all the tour
+// packages added by the tour operator to be display on the user home/main pages for user to view all
+// available packages
+
+func (tr *Travas) UserMainPage() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
+		var tourOp []model.Operator
+
+		//validate the struct tags of the Tours model
+		if err := tr.App.Validator.Struct(&tourOp); err != nil {
+			if _, ok := err.(*validator.InvalidValidationError); !ok {
+				_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+				log.Println(err)
+				return
+			}
+		}
+		//call the database queries to fetch all the tour packages
+		data, err := tr.DB.LoadPackage(tourOp)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("error no data found %v", err))
+			return
+		}
+
+		for _, op := range data {
+			//if tour packages data are available
+			if len(op.ToursList) >= 1 && op.Email != "" && op.Phone != "" {
+
+				ctx.JSON(http.StatusOK, gin.H{"tourPackages": op.ToursList, "email": op.Email, "number": op.Phone})
+			} else {
+				// else if tour package data is not available
+				ctx.JSON(http.StatusOK, gin.H{"tourPackages": "No data available"})
+			}
+		}
 	}
 }
 
-func (tr *Travas) CreateTour() gin.HandlerFunc {
+func (tr *Travas) SelectTour() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func (tr *Travas) BookTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		//	Get all the information from the frontend
 		var tour model.Tour
-		if err := ctx.Request.ParseForm(); err != nil {
-			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
-		}
-		tour.OperatorID = ctx.Request.Form.Get("operator_id")
-		tour.TourTitle = ctx.Request.Form.Get("tour_title")
-		tour.MeetingPoint = ctx.Request.Form.Get("meeting_point")
-		tour.StartTime = ctx.Request.Form.Get("start_time")
-		tour.LanguageOffered = ctx.Request.Form.Get("language_offered")
-		tour.NumberOfTourist = ctx.Request.Form.Get("number_of_tourist")
-		tour.Description = ctx.Request.Form.Get("description")
-		tour.TourGuide = ctx.Request.Form.Get("tour_guide")
-		tour.TourOperator = ctx.Request.Form.Get("tour_operator")
-		tour.OperatorContact = ctx.Request.Form.Get("operator_contact")
-		tour.Date = ctx.Request.Form.Get("date")
-
-		tourID, err := tr.DB.InsertTour(tour)
+		err := json.NewDecoder(ctx.Request.Body).Decode(&tour)
 		if err != nil {
-			_ = ctx.AbortWithError(http.StatusBadRequest, errors.New("error while adding new user"))
+			tr.App.ErrorLogger.Fatalf("no values in the request body : %v ", err)
+		}
+		// put the tour info in session
+		cookieData := sessions.Default(ctx)
+		cookieData.Set("tour", tour)
+
+		if err := cookieData.Save(); err != nil {
+			log.Println("error from the session storage")
+			_ = ctx.AbortWithError(http.StatusNotFound, gin.Error{Err: err})
 			return
 		}
 
-		ctx.JSON(http.StatusOK, gin.H{
-			"CreatedTour_ID": tourID,
-			"data":           tour,
-		})
+		userInfo := cookieData.Get("info").(model.UserInfo)
+		userID := userInfo.ID
+
+		// add the data to the tourist database
+		ok, err := tr.DB.AddTourPackage(userID, tour)
+		if !ok && err != nil {
+			_ = ctx.AbortWithError(http.StatusNotModified, fmt.Errorf("error cannot add user tour package in db : %v ", err))
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{"message": " You have successfully booked for a tour packages"})
 
 	}
-}
-
-func (tr *Travas) DeleteTour() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		id := ctx.Param("id")
-		_, err := tr.DB.DeleteTour(id)
-		if err != nil {
-			ctx.JSON(406, gin.H{"message": "Tour could not be deleted", "error": err.Error()})
-			ctx.Abort()
-			return
-		}
-		ctx.JSON(200, gin.H{"message": "Tour deleted"})
-	}
-
-}
-
-func (tr *Travas) GetTour() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		id := ctx.Param("id")
-		tour, err := tr.DB.GetTour(id)
-		if err != nil {
-			ctx.JSON(404, gin.H{"message": "tour not found", "error": err.Error()})
-			ctx.Abort()
-		} else {
-			ctx.JSON(200, gin.H{"data": tour})
-		}
-	}
-
-}
-
-func (tr *Travas) UpdateTour() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		id := ctx.Param("id")
-		tour := model.Tour{}
-
-		if ctx.BindJSON(&tour) != nil {
-			ctx.JSON(406, gin.H{"message": "Invalid Parameters"})
-			ctx.Abort()
-			return
-		}
-		_, err := tr.DB.UpdateTour(id, tour)
-		if err != nil {
-			ctx.JSON(406, gin.H{"message": "tour count not be updated", "error": err.Error()})
-			ctx.Abort()
-			return
-		}
-		ctx.JSON(200, gin.H{"message": "tour updated"})
-
-	}
-
-}
-func (tr *Travas) GetAllTours() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		list, err := tr.DB.FindAllTours()
-		if err != nil {
-			ctx.JSON(404, gin.H{"message": "Find Error", "error": err.Error()})
-			ctx.Abort()
-		} else {
-			ctx.JSON(200, gin.H{"data": list})
-		}
-	}
-
 }
