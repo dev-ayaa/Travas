@@ -8,3 +8,8 @@ func TouristData(db *mongo.Client, collection string) *mongo.Collection {
 	var touristData = db.Database("travasdb").Collection(collection)
 	return touristData
 }
+
+func OperatorData(db *mongo.Client, collection string) *mongo.Collection {
+	var touristData = db.Database("travasdb").Collection(collection)
+	return touristData
+}
