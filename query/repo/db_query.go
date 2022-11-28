@@ -19,7 +19,7 @@ func (td *TravasDB) InsertUser(user model.Tourist) (int, primitive.ObjectID, err
 
 	filter := bson.D{{Key: "email", Value: user.Email}}
 
-	var res interface{}
+	var res bson.M
 	err := TouristData(td.DB, "tourist").FindOne(ctx, filter).Decode(&res)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -33,7 +33,7 @@ func (td *TravasDB) InsertUser(user model.Tourist) (int, primitive.ObjectID, err
 		td.App.ErrorLogger.Fatal(err)
 	}
 
-	id := res.(primitive.ObjectID)
+	id := (res["_id"]).(primitive.ObjectID)
 
 	return 1, id, err
 }
