@@ -18,6 +18,7 @@ import (
 	"github.com/travas-io/travas/pkg/token"
 	"github.com/travas-io/travas/query"
 	"github.com/travas-io/travas/query/repo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -68,6 +69,8 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 		user.Token = ""
 		user.NewToken = ""
 		user.BookedTours = []model.Tour{}
+		user.TaggedTourist = []model.TaggedTourist{}
+		user.RequestTours = []model.Tour{}
 
 		if user.Password != user.CheckPassword {
 			_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("passwords did not match"))
@@ -172,7 +175,6 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 
 				ctx.SetCookie("authorization", t1, 60*60*24*7, "/", "localhost", false, true)
 				ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
-
 			}
 		}
 	}
@@ -184,9 +186,9 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 
 func (tr *Travas) UserMainPage() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var tourOp []model.Operator
+		var tourOp []model.Tour
 
-		//validate the struct tags of the Tours model
+		// validate the struct tags of the Tours model
 		if err := tr.App.Validator.Struct(&tourOp); err != nil {
 			if _, ok := err.(*validator.InvalidValidationError); !ok {
 				_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
@@ -194,22 +196,19 @@ func (tr *Travas) UserMainPage() gin.HandlerFunc {
 				return
 			}
 		}
-		//call the database queries to fetch all the tour packages
-		data, err := tr.DB.LoadPackage(tourOp)
+		// call the database queries to fetch all the tour packages
+		data, err := tr.DB.LoadTourPackage(tourOp)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("error no data found %v", err))
 			return
 		}
 
-		for _, op := range data {
-			//if tour packages data are available
-			if len(op.ToursList) >= 1 && op.Email != "" && op.Phone != "" {
-
-				ctx.JSON(http.StatusOK, gin.H{"tourPackages": op.ToursList, "email": op.Email, "number": op.Phone})
-			} else {
-				// else if tour package data is not available
-				ctx.JSON(http.StatusOK, gin.H{"tourPackages": "No data available"})
-			}
+		if len(data) >= 1 {
+			// if tour packages are available
+			ctx.JSON(http.StatusOK, gin.H{"tours": data})
+		} else {
+			// else if tour package data is not available
+			ctx.JSON(http.StatusOK, gin.H{"tour": "No data available"})
 		}
 	}
 }
@@ -230,7 +229,8 @@ func (tr *Travas) BookTour() gin.HandlerFunc {
 		}
 		// put the tour info in session
 		cookieData := sessions.Default(ctx)
-		cookieData.Set("tour", tour)
+		cookieData.Set("booked_tour", tour)
+		cookieData.Set("tour_id", tour.ID)
 
 		if err := cookieData.Save(); err != nil {
 			log.Println("error from the session storage")
@@ -243,8 +243,35 @@ func (tr *Travas) BookTour() gin.HandlerFunc {
 
 		// add the data to the tourist database
 		ok, err := tr.DB.AddTourPackage(userID, tour)
-		if !ok && err != nil {
+		if !ok {
 			_ = ctx.AbortWithError(http.StatusNotModified, fmt.Errorf("error cannot add user tour package in db : %v ", err))
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{"message": " You have successfully booked for a tour packages"})
+	}
+}
+
+func (tr *Travas) ProcessCheckOut () gin.HandlerFunc{
+	return func(ctx *gin.Context){
+		if err := ctx.Request.ParseForm(); err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+		}
+		var taggedTourist []model.TaggedTourist
+		err := json.NewDecoder(ctx.Request.Body).Decode(&taggedTourist)
+		if err != nil {
+			tr.App.ErrorLogger.Fatalf("no values in the request body : %v ", err)
+		}
+
+		cookieData := sessions.Default(ctx)
+
+		userInfo := cookieData.Get("info").(model.UserInfo)
+		tourID:= cookieData.Get("tour_id").(primitive.ObjectID)
+		userID := userInfo.ID
+		
+		
+		ok, _ :=  tr.DB.UpdateTourPlans(userID, tourID, taggedTourist)
+		if !ok{
+			_ = ctx.AbortWithError(http.StatusNotModified, fmt.Errorf("error cannot number of tagged tourist : %v ", err))
 		}
 
 		ctx.JSON(http.StatusOK, gin.H{"message": " You have successfully booked for a tour packages"})

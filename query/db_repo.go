@@ -11,9 +11,10 @@ type TravasDBRepo interface {
 	InsertUser(user model.Tourist) (int, primitive.ObjectID, error)
 	CheckForUser(userID primitive.ObjectID) (bool, error)
 	UpdateInfo(userID primitive.ObjectID, tk map[string]string) (bool, error)
-	LoadPackage(res []model.Operator) ([]model.Operator, error)
+	LoadTourPackage(res []model.Tour) ([]model.Tour, error) 
 	AddTourPackage(userID primitive.ObjectID, tour model.Tour) (bool, error)
-
+	UpdateTourPlans(userID, tourID primitive.ObjectID, tag []model.TaggedTourist) (bool, error)	
+	
 	//InsertTour(tour model.Tour) (primitive.ObjectID, error)
 	//DeleteTour(tourID string) (bool, error)
 	//UpdateTour(tourID string, tour model.Tour) (bool, error)
