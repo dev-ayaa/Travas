@@ -14,13 +14,21 @@ type Tourist struct {
 	Password      string             `bson:"password" Usage:"required"`
 	CheckPassword string             `bson:"check_password" Usage:"required"`
 	Phone         string             `bson:"phone" Usage:"required"`
-	BookedTours   []Tour             `bson:"booked_tours"`
-	RequestTours  []Tour             `bson:"request_tours"`
+	BookedTours   []Tour             `bson:"booked_tour"`
+	RequestTours  []Tour             `bson:"request_tour"`
+	TaggedTourist []TaggedTourist    `bson:"tagged_tourist"`
 	GeoLocation   string             `bson:"geo_location"`
 	Token         string             `bson:"token" Usage:"jwt"`
 	NewToken      string             `bson:"new_token" Usage:"jwt"`
 	CreatedAt     time.Time          `bson:"created_at" Usage:"datetime"`
 	UpdatedAt     time.Time          `bson:"updated_at" Usage:"datetime"`
+}
+
+type TaggedTourist struct {
+	FirstName string `bson:"first_name" Usage:"required,alpha,omitempty"`
+	LastName  string `bson:"last_name" Usage:"required,alpha,omitempty"`
+	Email     string `bson:"email" Usage:"required,alphanumeric"`
+	Password  string `bson:"password" Usage:"required"`
 }
 
 type Operator struct {
