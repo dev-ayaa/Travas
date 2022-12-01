@@ -22,7 +22,6 @@ func Authorization() gin.HandlerFunc {
 		if tokenString == "" {
 			_ = ctx.AbortWithError(http.StatusNoContent, errors.New("no value for authorization header"))
 		}
-		//fmt.Println(tokenString)
 
 		parse, err := token.Parse(tokenString)
 		if err != nil {
