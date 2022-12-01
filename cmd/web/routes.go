@@ -5,8 +5,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-
-	//"github.com/gorilla/mux"
 	"github.com/travas-io/travas/pkg/controller"
 )
 
@@ -20,11 +18,8 @@ func Routes(r *gin.Engine, t controller.Travas) {
 	router.POST("/api/user/register", t.ProcessRegister())
 	router.GET("/api/user/sign-in", t.LoginPage())
 	router.POST("/api/user/sign-in", t.ProcessLogin())
-	//router.POST("/api/tour/create", t.CreateTour())
-	//router.DELETE("/api/tour/delete/:id", t.DeleteTour())
-	//router.PUT("/api/tour/update/:id", t.UpdateTour())
-	//router.GET("/api/tour/tours", t.GetAllTours())
-	//router.GET("/api/tour/:id", t.GetTour())
+	router.POST("/user/book/package", t.BookTour())
+
 	protectRouter := r.Group("/api/auth")
 	protectRouter.Use(Authorization())
 	{
@@ -34,4 +29,13 @@ func Routes(r *gin.Engine, t controller.Travas) {
 
 	}
 
+}
+func OperatorsRoutes(r *gin.Engine, t controller.Travas) {
+	router := r.Use(gin.Logger(), gin.Recovery())
+	router.Use(cors.Default())
+	router.POST("/api/tour/create", t.CreateTour())
+	router.DELETE("/api/tour/delete/", t.DeleteTour())
+	router.PUT("/api/tour/update/", t.UpdateTour())
+	router.GET("/api/tour/tours", t.GetAllTours())
+	router.GET("/api/tour/", t.GetTour())
 }
