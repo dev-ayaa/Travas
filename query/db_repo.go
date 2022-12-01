@@ -5,7 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// todo -> all our queries method are to implement the interface
+// todo -> all our queries method are to implement this interface
 
 type TravasDBRepo interface {
 	InsertUser(user model.Tourist) (int, primitive.ObjectID, error)
