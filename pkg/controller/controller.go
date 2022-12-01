@@ -186,10 +186,10 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 
 func (tr *Travas) UserMainPage() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var tourOp []model.Tour
+		var tours []model.Tour
 
 		// validate the struct tags of the Tours model
-		if err := tr.App.Validator.Struct(&tourOp); err != nil {
+		if err := tr.App.Validator.Struct(&tours); err != nil {
 			if _, ok := err.(*validator.InvalidValidationError); !ok {
 				_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
 				log.Println(err)
@@ -197,7 +197,7 @@ func (tr *Travas) UserMainPage() gin.HandlerFunc {
 			}
 		}
 		// call the database queries to fetch all the tour packages
-		data, err := tr.DB.LoadTourPackage(tourOp)
+		data, err := tr.DB.LoadTourPackage(tours)
 		if err != nil {
 			_ = ctx.AbortWithError(http.StatusNotFound, fmt.Errorf("error no data found %v", err))
 			return
@@ -251,8 +251,8 @@ func (tr *Travas) BookTour() gin.HandlerFunc {
 	}
 }
 
-func (tr *Travas) ProcessCheckOut () gin.HandlerFunc{
-	return func(ctx *gin.Context){
+func (tr *Travas) ProcessCheckOut() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
 		if err := ctx.Request.ParseForm(); err != nil {
 			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
 		}
@@ -265,16 +265,104 @@ func (tr *Travas) ProcessCheckOut () gin.HandlerFunc{
 		cookieData := sessions.Default(ctx)
 
 		userInfo := cookieData.Get("info").(model.UserInfo)
-		tourID:= cookieData.Get("tour_id").(primitive.ObjectID)
+		tourID := cookieData.Get("tour_id").(primitive.ObjectID)
 		userID := userInfo.ID
-		
-		
-		ok, _ :=  tr.DB.UpdateTourPlans(userID, tourID, taggedTourist)
-		if !ok{
+
+		ok, _ := tr.DB.UpdateTourPlans(userID, tourID, taggedTourist)
+		if !ok {
 			_ = ctx.AbortWithError(http.StatusNotModified, fmt.Errorf("error cannot number of tagged tourist : %v ", err))
 		}
 
-		ctx.JSON(http.StatusOK, gin.H{"message": " You have successfully booked for a tour packages"})
+		ctx.JSON(http.StatusOK, gin.H{"message": " You have successfully booked for a tour package"})
 
 	}
+}
+
+func (tr *Travas) CreateTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var tour model.Tour
+		if err := ctx.Request.ParseForm(); err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+		}
+
+		err := json.NewDecoder(ctx.Request.Body).Decode(&tour)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+			tr.App.ErrorLogger.Fatalf("no values in the request body : %v ", err)
+		}
+
+		tourID, err := tr.DB.InsertTour(tour)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, errors.New("error while adding new tour"))
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"CreatedTour_ID": tourID,
+			"data":           tour,
+		})
+
+	}
+}
+
+func (tr *Travas) DeleteTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Params.ByName("id")
+		tourID, _ := primitive.ObjectIDFromHex(id)
+		_, err := tr.DB.DeleteTour(tourID)
+		if err != nil {
+			ctx.JSON(http.StatusNotModified, gin.H{"message": "Tour could not be deleted", "error": err.Error()})
+			ctx.AbortWithError(http.StatusNotModified, errors.New("tour could not be deleted"))
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"message": "Tour deleted"})
+	}
+
+}
+
+func (tr *Travas) GetTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Params.ByName("id")
+		tourID, _ := primitive.ObjectIDFromHex(id)
+		tour, err := tr.DB.GetTour(tourID)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "tour not found", "error": err.Error()})
+			ctx.AbortWithError(http.StatusNotFound, errors.New("tour not found"))
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{"data": tour})
+		}
+	}
+
+}
+
+func (tr *Travas) UpdateTour() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		id := ctx.Params.ByName("id")
+		tourID, _ := primitive.ObjectIDFromHex(id)
+		var tour = model.Tour{}
+		err := json.NewDecoder(ctx.Request.Body).Decode(&tour)
+		if err != nil {
+			_ = ctx.AbortWithError(http.StatusBadRequest, gin.Error{Err: err})
+			tr.App.ErrorLogger.Fatalf("no values in the request body : %v ", err)
+		}
+		if result := tr.DB.UpdateTour(tourID, &tour); result != nil {
+			ctx.JSON(http.StatusOK, gin.H{"updated": result})
+		} else {
+			ctx.JSON(http.StatusNotModified, gin.H{"message": "tour can not not be updated", "error": err.Error()})
+			ctx.AbortWithError(http.StatusNotModified, errors.New("tour can not not be updated"))
+		}
+	}
+
+}
+func (tr *Travas) GetAllTours() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		list, err := tr.DB.FindAllTours()
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"message": "Find Error", "error": err.Error()})
+			ctx.AbortWithError(http.StatusNotModified, errors.New("find Error"))
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{"tours": list})
+		}
+	}
+
 }

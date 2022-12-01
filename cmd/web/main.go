@@ -66,7 +66,7 @@ func main() {
 
 	handler := controller.NewTravas(&app, client)
 	Routes(router, *handler)
-
+	OperatorsRoutes(router, *handler)
 	app.InfoLogger.Println("*---------- Starting Travas Web Server -----------*")
 	c := make(chan os.Signal, 1)
 	go func() {
