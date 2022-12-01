@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // database queries is done in this file
@@ -121,4 +122,110 @@ func (td *TravasDB) UpdateTourPlans(userID, tourID primitive.ObjectID, tag []mod
 		return false, fmt.Errorf("cannot update document : %v ", err)
 	}
 	return true, nil
+}
+
+// Tours Operators Query Start Here
+func (td *TravasDB) InsertTour(tour model.Tour) (primitive.ObjectID, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var id primitive.ObjectID
+
+	filter := bson.D{{Key: "tour_title", Value: tour.TourTitle}}
+	var res bson.M
+	err := ToursData(td.DB, "tours").FindOne(ctx, filter).Decode(&res)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			tour.ID = primitive.NewObjectID()
+			doc := bson.D{
+				{Key: "_id", Value: tour.ID},
+				{Key: "operator_id", Value: tour.OperatorID},
+				{Key: "tour_title", Value: tour.TourTitle},
+				{Key: "meeting_point", Value: tour.MeetingPoint},
+				{Key: "start_time", Value: tour.StartTime},
+				{Key: "language_offered", Value: tour.LanguageOffered},
+				{Key: "number_of_tourist", Value: tour.NumberOfTourist},
+				{Key: "description", Value: tour.Description},
+				{Key: "tour_guide", Value: tour.TourGuide},
+				{Key: "tour_operator", Value: tour.TourOperator},
+				{Key: "operator_contact", Value: tour.OperatorContact},
+				{Key: "date", Value: tour.Date},
+			}
+			_, insertErr := ToursData(td.DB, "tours").InsertOne(ctx, doc)
+			if insertErr != nil {
+				td.App.ErrorLogger.Fatalf("cannot add user to the database : %v ", insertErr)
+			}
+			return tour.ID, nil
+		}
+		td.App.ErrorLogger.Fatal(err)
+	}
+
+	for k, v := range res {
+		if k == "_id" {
+			switch tourID := v.(type) {
+			case primitive.ObjectID:
+				id = tourID
+			}
+		}
+	}
+	return id, err
+}
+
+func (td *TravasDB) DeleteTour(tourID primitive.ObjectID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	var result bson.M
+
+	filter := bson.D{{Key: "_id", Value: tourID}}
+	_, err := ToursData(td.DB, "tours").DeleteOne(ctx, filter)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			td.App.ErrorLogger.Println("no document found for this query")
+			return false, err
+		}
+		td.App.ErrorLogger.Fatalf("cannot execute the database query perfectly : %v ", err)
+	}
+	td.App.InfoLogger.Printf("found document %v", result)
+	return true, err
+}
+
+func (td *TravasDB) UpdateTour(tourID primitive.ObjectID, tour *model.Tour) *model.Tour {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "_id", Value: tour.ID}}
+	err := ToursData(td.DB, "tours").FindOneAndReplace(ctx, filter, tour, &options.FindOneAndReplaceOptions{})
+	if err != nil {
+		return tour
+	}
+	return nil
+}
+func (td *TravasDB) GetTour(tourID primitive.ObjectID) (tour model.Tour, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "_id", Value: tourID}}
+	err = ToursData(td.DB, "tours").FindOne(ctx, filter).Decode(&tour)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			td.App.ErrorLogger.Println("no document found for this query")
+		}
+		td.App.ErrorLogger.Fatalf("cannot execute the database query perfectly : %v ", err)
+	}
+	return tour, err
+}
+func (td *TravasDB) FindAllTours() (tours []model.Tour, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	cursor, err := ToursData(td.DB, "tours").Find(ctx, bson.D{{}})
+	if err != nil {
+		return tours, fmt.Errorf("cannot find document in the database %v ", err)
+	}
+
+	if err = cursor.All(ctx, &tours); err != nil {
+		return nil, err
+	}
+
+	return tours, err
+
 }
