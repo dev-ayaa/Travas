@@ -59,7 +59,10 @@ type Tour struct {
 	TourGuide       string             `bson:"tour_guide"`
 	TourOperator    string             `bson:"tour_operator"`
 	OperatorContact string             `bson:"operator_contact"`
+	Category        string             `bson:"category"`
+	Activity        string             `bson:"activity"`
 	Date            string             `bson:"date"`
+	Price           int64              `bson:"price"`
 }
 
 type UserInfo struct {

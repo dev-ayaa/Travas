@@ -8,6 +8,5 @@ import (
 type Tools struct {
 	ErrorLogger *log.Logger
 	InfoLogger  *log.Logger
-	//Session     *scs.SessionManager
 	Validator *validator.Validate
 }
