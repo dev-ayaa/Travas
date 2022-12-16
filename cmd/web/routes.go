@@ -23,6 +23,7 @@ func Routes(r *gin.Engine, t controller.Travas) {
 	protectRouter := r.Group("/api/auth")
 	protectRouter.Use(Authorization())
 	{
+
 		protectRouter.GET("/user/home", t.UserMainPage())
 		protectRouter.GET("/user/select/package", t.SelectTour())
 		protectRouter.POST("/user/book/package", t.BookTour())
