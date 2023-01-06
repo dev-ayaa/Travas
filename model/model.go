@@ -70,3 +70,12 @@ type UserInfo struct {
 	Email    string
 	Password string
 }
+
+type PaymentSystem struct {
+	ID           primitive.ObjectID `bson:"_id"`
+	AmountPayed  float32            `bson:"amount_payed"`
+	DatePayed    time.Time          `bson:"date_payed"`
+	IsSuccessful bool               `bson:"is_successful"`
+	DateExpired  time.Time          `bson:"date_expired"`
+	GetPayment   primitive.ObjectID `bson:"get_payment"`
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/rpip/paystack-go"
 	"github.com/travas-io/travas/pkg/controller"
 )
 
@@ -39,4 +40,11 @@ func OperatorsRoutes(r *gin.Engine, t controller.Travas) {
 	router.PUT("/api/tour/update/", t.UpdateTour())
 	router.GET("/api/tour/tours", t.GetAllTours())
 	router.GET("/api/tour/", t.GetTour())
+}
+
+func Payment(r *gin.Engine, t paystack.TransferRequest) {
+	router := r.Use(gin.Logger(), gin.Recovery())
+	router.Use(cors.Default())
+	router.POST("api/v1/payment", t.Amount())
+
 }

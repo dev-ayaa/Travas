@@ -20,4 +20,9 @@ type TravasDBRepo interface {
 	UpdateTour(tourID primitive.ObjectID, tour *model.Tour) *model.Tour
 	GetTour(tourID primitive.ObjectID) (tour model.Tour, err error)
 	FindAllTours() (tours []model.Tour, err error)
+
+	savePayment(system model.PaymentSystem) (primitive.ObjectID, error)
+	getPayment(systemID primitive.ObjectID) (payment *model.PaymentSystem, err error)
+	deletePayment(systemID primitive.ObjectID) (bool, error)
+	findAllPayment() (payment []model.PaymentSystem, err error)
 }

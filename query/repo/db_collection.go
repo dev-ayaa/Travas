@@ -18,3 +18,9 @@ func ToursData(db *mongo.Client, collection string) *mongo.Collection {
 	var tourData = db.Database("travasdb").Collection(collection)
 	return tourData
 }
+
+func PaymentData(db *mongo.Client, collection string) *mongo.Collection {
+	var paymentData = db.Database("travasdb").Collection(collection)
+	return paymentData
+
+}
