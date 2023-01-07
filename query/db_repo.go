@@ -21,8 +21,8 @@ type TravasDBRepo interface {
 	GetTour(tourID primitive.ObjectID) (tour model.Tour, err error)
 	FindAllTours() (tours []model.Tour, err error)
 
-	savePayment(system model.PaymentSystem) (primitive.ObjectID, error)
-	getPayment(systemID primitive.ObjectID) (payment *model.PaymentSystem, err error)
-	deletePayment(systemID primitive.ObjectID) (bool, error)
-	findAllPayment() (payment []model.PaymentSystem, err error)
+	SavePayment(system model.PaymentSystem) (int, primitive.ObjectID, error)
+	SetPayment(systemID primitive.ObjectID) (payment *model.PaymentSystem, err error)
+	DeletePayment(systemID primitive.ObjectID) (bool, error)
+	FindAllPayment() (tours []model.PaymentSystem, err error)
 }

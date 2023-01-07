@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (td *TravasDB) savePayment(system model.PaymentSystem) (int, primitive.ObjectID, error) {
+func (td *TravasDB) SavePayment(system model.PaymentSystem) (int, primitive.ObjectID, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
@@ -42,7 +42,7 @@ func (td *TravasDB) savePayment(system model.PaymentSystem) (int, primitive.Obje
 	return 1, id, err
 }
 
-func (td *TravasDB) getPayment(systemID primitive.ObjectID) (payment *model.PaymentSystem, err error) {
+func (td *TravasDB) SetPayment(systemID primitive.ObjectID) (payment *model.PaymentSystem, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	filter := bson.D{{Key: "_id", Value: systemID}}
@@ -57,7 +57,7 @@ func (td *TravasDB) getPayment(systemID primitive.ObjectID) (payment *model.Paym
 
 }
 
-func (td *TravasDB) deletePayment(systemID primitive.ObjectID) (bool, error) {
+func (td *TravasDB) DeletePayment(systemID primitive.ObjectID) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
@@ -76,7 +76,7 @@ func (td *TravasDB) deletePayment(systemID primitive.ObjectID) (bool, error) {
 	return true, err
 }
 
-func (td *TravasDB) findAllPayment() (tours []model.PaymentSystem, err error) {
+func (td *TravasDB) FindAllPayment() (tours []model.PaymentSystem, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 
