@@ -72,9 +72,9 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 		user.TaggedTourist = []model.TaggedTourist{}
 		user.RequestTours = []model.Tour{}
 
-		if user.Password != user.CheckPassword {
-			_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("passwords did not match"))
-		}
+		//if user.Password != user.CheckPassword {
+		//	_ = ctx.AbortWithError(http.StatusInternalServerError, errors.New("passwords did not match"))
+		//}
 
 		user.Password, _ = hash.Encrypt(user.Password)
 		user.CheckPassword, _ = hash.Encrypt(user.CheckPassword)
@@ -106,20 +106,24 @@ func (tr *Travas) ProcessRegister() gin.HandlerFunc {
 			_ = ctx.AbortWithError(http.StatusNotFound, gin.Error{Err: err})
 			return
 		}
-		switch track {
-		case 1:
+		switch {
+		case track == 1:
 			// add the user id to session
 			// redirect to the home page of the application
 			ctx.JSON(http.StatusOK, gin.H{
 				"message": "Existing Account, Go to the Login page",
 			})
-		case 0:
+		case track == 0:
 			//	after inserting new user to the database
 			//  notify the user to verify their  details via mail
 			//  OR
 			//  Send notification message on the page for them to login
 			ctx.JSON(http.StatusOK, gin.H{
 				"message": "Registered Successfully",
+			})
+		case user.Password != user.CheckPassword:
+			ctx.JSON(http.StatusNotAcceptable, gin.H{
+				"message": "unmatched password !Input correct password",
 			})
 		}
 	}
