@@ -179,7 +179,12 @@ func (tr *Travas) ProcessLogin() gin.HandlerFunc {
 
 				ctx.SetCookie("authorization", t1, 60*60*24*7, "/", "localhost", false, true)
 				ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to user homepage"})
+
+			case email != userInfo.Email:
+				ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Incorrect email ! login with correct details"})
+
 			}
+
 		}
 	}
 }
